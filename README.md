@@ -1,6 +1,6 @@
 ﻿# pjax
 
-可前端独立执行的 pjax，同时请求中也会携带连个ajax请求头，方便后端做优化兼容
+可前端独立执行的 pjax。同时请求中也会携带两个ajax请求头，方便后端做优化处理。
 ```js
 xhr.setRequestHeader("X-PJAX", true); // 表明是 pjax 请求
 xhr.setRequestHeader("X-PJAX-Container", container); // 表明是当前需要请求的内容容器选择器所组成的数组
