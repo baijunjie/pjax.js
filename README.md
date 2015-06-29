@@ -60,7 +60,7 @@ require(["pjax"], function(pjax) {
 
 ## 主要原理
 
-1) 只要页面引入pjax.js文件，即使不做任何调用，初始化时，将页面的所有外部链接地址转化为绝对路径。<br>
+1) 只要页面引入pjax.js文件，即使不做任何调用，在初始化时，都会将页面的所有外部链接地址转化为绝对路径。<br>
 2) 如果浏览器支持history.replaceState，则使用history.replaceState替换掉当前的历史记录点，保证以后回退到初始url时不会出错。<br>
 2) 调用pjax方法后，会根据配置信息，检查所有焦点元素，将href属性值与当前url相同的元素添加上焦点类。<br>
 3) 如果浏览器不支持 history.pushState 则到此为止。<br>
