@@ -1,5 +1,5 @@
 /*!
- * pjax v0.9.1
+ * pjax v0.9.2
  * @author baijunjie
  */
 (function(root, factory) {
@@ -23,9 +23,7 @@
 		// 将所有资源的路径转化成绝对路径
 		convertAbsPath($(document.documentElement), location.href);
 
-		var clickEventType = !!navigator.userAgent.match(/mobile/i) ? "touchend" : "click",
-
-			scroller = allowScroll(document.documentElement) ? document.documentElement : document.body,
+		var scroller = allowScroll(document.documentElement) ? document.documentElement : document.body,
 			$scroller = $(scroller),
 			$win = $(window),
 			$body = $(document.body),
@@ -151,7 +149,7 @@
 		updateListSort(curInfo.updateList);
 
 		if (link) {
-			$(document).on(clickEventType, link, function(e) {
+			$(document).on("click", link, function(e) {
 				var href = this.href;
 
 				if (isVoid(this.getAttribute("href"))) {
