@@ -242,7 +242,7 @@
 	}*/
 
 	function removeScript(html) {
-		if(html.indexOf('<script') == -1) return html;
+		if(typeof html !== "string" || html.indexOf("<script") == -1) return html;
 		var reg = /<script[^\>]*?>[^\x00]*?<\/script>/ig;
 		return html.replace(reg, '');
 	}
