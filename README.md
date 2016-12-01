@@ -39,11 +39,17 @@ var pjax = new Pjax({
 	done: function(url, data){}, // 加载结束时的回调，this指向加载的导航链接的DOM元素，将请求的url以及请求到的data作为参数传入
 	fail: function(url){}, // 加载结束时的回调，this指向加载的导航链接的DOM元素，将请求的url作为参数传入
 
-	update: function($container, $content, href){}, // 更新内容前的回调，如果有多个容器，则每个容器在内容更新前都会调用一次
-	complete: function($container, $content, href){} // 更新内容完成后的回调，如果有多个容器，则每个容器在内容更新完成后都会调用一次
+	noConvertPath: false, // 表示是否b不转换页面中所有资源的相对路径。默认关闭，如果确定异步加载的页面与当前页面都在同一目录下，则可以开启。
+
+	load: function(url){}, // 加载开始时的回调，this指向加载的导航链接的DOM元素，将请求的url作为参数传入
+	done: function(url, data){}, // 加载结束时的回调，this指向加载的导航链接的DOM元素，将请求的url以及请求到的data作为参数传入
+	fail: function(url){}, // 加载结束时的回调，this指向加载的导航链接的DOM元素，将请求的url作为参数传入
+
+	update: function($oldContainerr, $newContainer, href){}, // 更新内容前的回调，如果有多个容器，则每个容器在内容更新前都会调用一次
+	complete: function($oldContainer, $newContainer, href){} // 更新内容完成后的回调，如果有多个容器，则每个容器在内容更新完成后都会调用一次
 	// this 指向更新容器的DOM元素
-	// $container 表示更新容器的 jQuery 对象
-	// $content 表示更新内容的 jQuery 对象，在更新前可以修改该对象，从而改变被更新的内容
+	// $oldContainer 表示旧容器的 jQuery 对象
+	// $newContainer 表示新容器的 jQuery 对象，在更新前可以修改该对象，从而改变被更新的内容
 	// href 触发内容更新的链接地址
 });
 
@@ -82,9 +88,9 @@ require(["Pjax"], function(Pjax) {
 
 ## 主要原理
 
-1) 只要页面引入 Pjax.js 文件，即使不做任何调用，在初始化时，都会将页面的所有外部链接地址转化为绝对路径。<br>
+1) 创建Pjax对象后，都会将页面的所有外部链接地址转化为绝对路径。<br>
 2) 如果浏览器支持 history.replaceState，则使用 history.replaceState 替换掉当前的历史记录点，保证以后回退到初始 url 时不会出错。<br>
-3) 创建Pjax对象后，会根据配置信息，检查所有焦点元素，将href属性值与当前url相同的元素添加上焦点类。并缓存当前页面的 href 以及对应的内容。<br>
+3) 根据配置信息，检查所有焦点元素，将href属性值与当前url相同的元素添加上焦点类。并缓存当前页面的 href 以及对应的内容。<br>
 4) 点击链接后，根据链接的 href 检查缓存，判断是否已经被加载。如果 href 已经被加载，那么读取缓存。如果没有加载，则用 ajax 去加载。<br>
 5) 拿到内容信息后，先进行内容解析（注意，这里解析时会将所有的 script 标签过滤掉），然后将需要的内容进行缓存。<br>
 6) 如果浏览器支持 history.replaceState，则保存历史记录点，并将请求的 href 作为记录点的数据。<br>

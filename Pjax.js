@@ -1,5 +1,5 @@
 /*!
- * Pjax v1.1.0
+ * Pjax v1.2.1
  * @author baijunjie
  */
 (function(root, factory) {
@@ -19,40 +19,16 @@
 
 	var supportPjax = !!window.history.pushState;
 
-	// 将所有资源的路径转化成绝对路径
-	convertAbsPath($(document.documentElement), location.href);
-
 	var scroller = allowScroll(document.documentElement) ? document.documentElement : document.body,
-		$scroller = $(scroller),
+		//$scroller = $(scroller),
 		$win = $(window),
 		$doc = $(document),
 		$body = $(document.body),
 
+		noConvertPath, // 表示是否b不转换页面中所有资源的相对路径。
 		cacheData = {},
 		pjaxID = 0,
-
-		// 保存当前的 url 以及相关内容信息
-		curInfo = {
-			href: location.href,
-			title: document.title,
-			updateList: [],
-			script: []
-		};
-
-	// 用于保存每个pjax的选择器信息
-	cacheData.pjaxOption = [];
-	setCache(cacheData, location.href, curInfo);
-	changeHistory(location.href, true);
-
-	if (supportPjax) {
-		window.addEventListener("popstate", function(e) {
-			var href = e.state;
-			if (href && href in cacheData) {
-				updateContent(cacheData[href]);
-			}
-			window.setTimeout(savePos, 0); // 这里必须异步执行，否则无效
-		}, false);
-	}
+		curInfo = {}; // 保存当前的 url 以及相关内容信息
 
 	// 因为遍历是倒序遍历，因此按层级从大到小排列
 	function updateListSort(updateList) {
@@ -174,6 +150,8 @@
 
 	// 将所有资源的路径转化成绝对路径
 	function convertAbsPath($dom, href) {
+		if (noConvertPath) return;
+
 		var $doms = $dom.filter("[href],[src]").add($dom.find("[href],[src]")),
 			curDir = getDir(href);
 
@@ -257,18 +235,18 @@
 			$head = $headChildren ? $("<div>").append($headChildren) : null,
 			$body = $bodyChildren ? $("<div>").append($bodyChildren) : null,
 
-			pjaxOption = cacheData.pjaxOption,
+			pjaxOptions = cacheData.pjaxOptions,
 			info = {},
 			id = [], // 表示内容持有者的ID
 			layer = [], // 表示容器的层级数
-			content = [],
 			script = [],
+			container = [],
 			containerSelector = [];
 
-		// 根据ajaxOption获取相应的内容信息
+		// 根据ajaxOptions获取相应的内容信息
 		var alreadyGetSelector = {}; // 记录已经获取过的选择器，防止重复获取
-		for (var i = 0, l = pjaxOption.length; i < l; i++) {
-			var opt = pjaxOption[i];
+		for (var i = 0, l = pjaxOptions.length; i < l; i++) {
+			var opt = pjaxOptions[i];
 			if (opt.script) {
 				script.push($head.find(opt.script).add($body.find(opt.script)));
 			}
@@ -282,20 +260,20 @@
 
 				var $dom;
 				if (selector === "head") {
-					$dom = $headChildren;
+					$dom = $head;
 				} else if (selector === "body") {
-					$dom = $bodyChildren;
+					$dom = $body;
 				} else {
-					$dom = $body.find(selector + " >");
+					$dom = $body.find(selector);
 				}
 
 				if ($dom.length) {
 					convertAbsPath($dom, href);
 				} else {
-					$dom = $(selector + " >");
+					$dom = $(selector);
 				}
 
-				content.push($dom);
+				container.push($dom);
 				alreadyGetSelector[selector] = true;
 			}
 		}
@@ -308,7 +286,7 @@
 			updateList.push({
 				id: id[l],
 				layer: layer[l],
-				$content: content[l],
+				$container: container[l],
 				containerSelector: containerSelector[l]
 			});
 		}
@@ -340,7 +318,7 @@
 		container = $.map(container.split(","), function(n){ return $.trim(n); });
 		link = $.map(link.split(","), function(n){ return $.trim(n); });
 
-		cacheData.pjaxOption[id] = {
+		cacheData.pjaxOptions[id] = {
 			container: container,
 			script: script,
 			active: active,
@@ -362,7 +340,7 @@
 			curInfo.updateList.push({
 				id: id,
 				layer: $container.parents().length,
-				$content: $(removeScript($container.html())),
+				$container: $container.clone().html(removeScript($container.html())),
 				containerSelector: selector
 			});
 		}
@@ -373,17 +351,19 @@
 
 		if (link.length) {
 			for (var i = 0, l = link.length; i < l; i++) {
-				$doc.on("click", link[i],
-					$.proxy(
-						linkClickCallback,
-						null,
-						noCacheIsArray ? noCache[i] : noCache,
-						noHistoryIsArray ? noHistory[i] : noHistory,
-						noChangeURLIsArray ? noChangeURL[i] : noChangeURL,
-						pileIsArray ? pile[i] : pile,
-						opt,
-						container)
-				);
+				if (link[i]) {
+					$doc.on("click", link[i],
+						$.proxy(
+							linkClickCallback,
+							null,
+							noCacheIsArray ? noCache[i] : noCache,
+							noHistoryIsArray ? noHistory[i] : noHistory,
+							noChangeURLIsArray ? noChangeURL[i] : noChangeURL,
+							pileIsArray ? pile[i] : pile,
+							opt,
+							container)
+					);
+				}
 			}
 		}
 	}
@@ -429,33 +409,37 @@
 				continue;
 			}
 
-			var $container = $(selector),
-				$children = $container.children(),
-				$content = updateInfo.$content.clone();
+			var $curContainer = $(selector),
+				$container = updateInfo.$container.clone();
 
-			if (!$content.length || !$container.length
-			|| ($content.length === $children.length && $content.html() === $children.html())) {
+			if (!$curContainer.length
+			|| !$container.length
+			|| $curContainer.html() === $container.html()) {
 				continue;
 			}
 
 			var id = updateInfo.id,
-				opt = cacheData.pjaxOption[id];
+				opt = cacheData.pjaxOptions[id];
 
-			opt.updateCallback.call($container[0], $container, $content, info.href);
+			opt.updateCallback.call($curContainer[0], $curContainer, $container, info.href);
 
 			if (!pile || ($.isArray(pile) && !pile[$.inArray(selector, container)])) {
-				// $children.detach();
 				// 由于脚本在内容通过缓存再次被添加进页面时可以重复执行，因此这里要彻底清除
-				$container.empty();
+				$curContainer.empty();
 			}
 
-			$content
-				.stop()
-				.hide()
-				.appendTo($container)
-				.fadeIn();
+			// 如果选择到的容器不止1个，这样可以将他们分别加入
+			$container.each(function(i) {
+				$container
+					.eq(i)
+					.children()
+					.stop()
+					.css("opacity", 0)
+					.appendTo($curContainer.eq(i))
+					.animate({"opacity": 1});
+			});
 
-			opt.completeCallback.call($container[0], $container, $content, info.href);
+			opt.completeCallback.call($curContainer[0], $curContainer, $container, info.href);
 
 			//$updateContent = $updateContent.add($content);
 			changeID[id] = true;
@@ -471,11 +455,11 @@
 
 		// 全部更新完成后，才执行以下代码
 		var alreadyActive = {};
-		l = cacheData.pjaxOption.length;
+		l = cacheData.pjaxOptions.length;
 		while (l--) {
 			if (!changeID[l]) continue; // 如果该id对应的内容没有发生过变化，则跳过
 
-			var opt = cacheData.pjaxOption[l];
+			var opt = cacheData.pjaxOptions[l];
 
 			if (!alreadyActive[opt.active+opt.activeClass]) {
 				setActiveNav(opt.active, opt.activeClass, info.href);
@@ -525,7 +509,7 @@
 		});
 	}
 
-	var defaultOption = {
+	var defaultOptions = {
 		container: "head,body", // 一个选择器，表示更新异步加载内容的容器。如果需要同时更新多个容器中的内容，则每个容器选择器用“,”隔开。
 		// container 也可以是一个数组，每个 container 数组值对应一个 link 数组值。这种设置是为了同时设置不同容器与不同链接间的刷新关系。
 		link: "", // 一个选择器，表示链接。点击后使用 ajax 加载内容。如果需要选择多个链接，则每个链接选择器用“,”隔开。
@@ -548,15 +532,17 @@
 		// link: ".link1, .link2",
 		// pile: [[0,1,0], [0,0,0]],
 
+		noConvertPath: false, // 表示是否b不转换页面中所有资源的相对路径。默认关闭，如果确定异步加载的页面与当前页面都在同一目录下，则可以开启。
+
 		load: function(url){}, // 加载开始时的回调，this指向加载的导航链接的DOM元素，将请求的url作为参数传入
 		done: function(url, data){}, // 加载结束时的回调，this指向加载的导航链接的DOM元素，将请求的url以及请求到的data作为参数传入
 		fail: function(url){}, // 加载结束时的回调，this指向加载的导航链接的DOM元素，将请求的url作为参数传入
 
-		update: function($container, $content, href){}, // 更新内容前的回调，如果有多个容器，则每个容器在内容更新前都会调用一次
-		complete: function($container, $content, href){} // 更新内容完成后的回调，如果有多个容器，则每个容器在内容更新完成后都会调用一次
+		update: function($oldContainerr, $newContainer, href){}, // 更新内容前的回调，如果有多个容器，则每个容器在内容更新前都会调用一次
+		complete: function($oldContainer, $newContainer, href){} // 更新内容完成后的回调，如果有多个容器，则每个容器在内容更新完成后都会调用一次
 		// this 指向更新容器的DOM元素
-		// $container 表示更新容器的 jQuery 对象
-		// $content 表示更新内容的 jQuery 对象，在更新前可以修改该对象，从而改变被更新的内容
+		// $oldContainer 表示旧容器的 jQuery 对象
+		// $newContainer 表示新容器的 jQuery 对象，在更新前可以修改该对象，从而改变被更新的内容
 		// href 触发内容更新的链接地址
 	};
 
@@ -568,8 +554,8 @@
 
 	p.constructor = Pjax;
 
-	p._init = function(option) {
-		var opt = $.extend({}, defaultOption, option),
+	p._init = function(options) {
+		var opt = $.extend({}, defaultOptions, options),
 			container = opt.container,
 			link = opt.link,
 			script = opt.script,
@@ -578,6 +564,36 @@
 			noHistory = opt.noHistory,
 			noChangeURL = opt.noChangeURL,
 			pile = opt.pile;
+
+		noConvertPath = opt.noConvertPath;
+
+		if (!pjaxID) {
+			// 将所有资源的路径转化成绝对路径
+			convertAbsPath($(document.documentElement), location.href);
+
+			// 保存当前的 url 以及相关内容信息
+			curInfo = {
+				href: location.href,
+				title: document.title,
+				updateList: [],
+				script: []
+			};
+
+			// 用于保存每个pjax的选择器信息
+			cacheData.pjaxOptions = [];
+			setCache(cacheData, location.href, curInfo);
+			changeHistory(location.href, true);
+
+			if (supportPjax) {
+				window.addEventListener("popstate", function(e) {
+					var href = e.state;
+					if (href && href in cacheData) {
+						updateContent(cacheData[href]);
+					}
+					window.setTimeout(savePos, 0); // 这里必须异步执行，否则无效
+				}, false);
+			}
+		}
 
 		setActiveNav(opt.active, opt.activeClass, location.href);
 
@@ -610,7 +626,7 @@
 			);
 		}
 
-		this.option = opt;
+		this.options = opt;
 	};
 
 	// 通过 update 更新的链接地址不会调用缓存，而是重新请求
@@ -621,7 +637,7 @@
 	// pile 表示更新是否累积的规则所组成的数组，该数组中的每一个值和 container 参数中每一个值对应
 	p.update = function(href, container, noHistory, noChangeURL, pile) {
 		container = $.map(container.split(","), function(n){ return $.trim(n); });
-		ajaxUpdate.call(this.option, null, href, container, noHistory, noChangeURL, pile);
+		ajaxUpdate.call(this.options, null, href, container, noHistory, noChangeURL, pile);
 	}
 
 	return Pjax;
