@@ -1,21 +1,21 @@
 /*!
- * Pjax v1.2.1
+ * Pjax v1.2.2
  * @author baijunjie
  */
 (function(root, factory) {
-	"use strict";
+	'use strict';
 
-	if (typeof define === "function" && define.amd) {
-		define(["jquery"], factory);
-	} else if (typeof exports === "object") {
-		module.exports = factory(require("jquery"));
+	if (typeof module === 'object' && typeof exports === 'object') {
+		module.exports = factory(require('jquery'));
+	} else if (typeof define === 'function' && define.amd) {
+		define(['jquery'], factory);
 	} else {
 		root.bjj = root.bjj || {};
 		root.bjj.Pjax = factory(root.jQuery);
 	}
 
 }(this, function($) {
-	"use strict";
+	'use strict';
 
 	var supportPjax = !!window.history.pushState;
 
@@ -65,7 +65,7 @@
 		var url = getUrl(href),
 			$curLink = null;
 		$link.each(function(i, n) {
-			if (!isVoid(n.getAttribute("href")) && getUrl(n.href) === url) {
+			if (!isVoid(n.getAttribute('href')) && getUrl(n.href) === url) {
 				if (!$curLink) $curLink = $(n);
 				else $curLink = $curLink.add(n);
 			}
@@ -86,62 +86,62 @@
 
 	// 判断 href 是否为无效值
 	function isVoid(href) {
-		return !href || href.indexOf("#") === 0 || href.indexOf("javascript:") === 0;
+		return !href || href.indexOf('#') === 0 || href.indexOf('javascript:') === 0;
 	}
 
 	// 判断是否为绝对路径
 	function isAbsPath(href) {
-		return href && (href.indexOf("http") === 0 || href.indexOf("file:") === 0);
+		return href && (href.indexOf('http') === 0 || href.indexOf('file:') === 0);
 	}
 
 	// 获取当前的域名
 	function getHostname() {
-		return location.protocol + "//" + location.host;
+		return location.protocol + '//' + location.host;
 	}
 
 	// 获取不包含 # 部分的 url
 	function getUrl(href) {
-		return href ? href.replace(/#.*$/, "") : location.protocol + "//" + location.host + location.pathname;
+		return href ? href.replace(/#.*$/, '') : location.protocol + '//' + location.host + location.pathname;
 	}
 
 	// 获取路径
 	// http://www.baidu.com/page/index.html  =>  http://www.baidu.com/page/
 	function getDir(href) {
-		return href.replace(/[^\/]*$/, "");
+		return href.replace(/[^\/]*$/, '');
 	}
 
 	// 获取相对路径
-	// href = "http://www.baidu.com/page/content/index.html";
-	// dir  = "http://www.baidu.com/page/";
-	//      =>  "content/index.html"
+	// href = 'http://www.baidu.com/page/content/index.html';
+	// dir  = 'http://www.baidu.com/page/';
+	//      =>  'content/index.html'
 	function getRelPath(href, dir) {
-		return href.replace(dir, "");
+		return href.replace(dir, '');
 	}
 
 	// 获取绝对路径
-	// dir    = "http://www.baidu.com/page/content/";
+	// dir    = 'http://www.baidu.com/page/content/';
 	//
-	// relPath = "../map/baidumap.html";
-	//        =>  "http://www.baidu.com/page/map/baidumap.html";
+	// relPath = '../map/baidumap.html';
+	//        =>  'http://www.baidu.com/page/map/baidumap.html';
 	//
-	// relPath = "./map/baidumap.html";
-	//        =>  "http://www.baidu.com/page/content/map/baidumap.html";
+	// relPath = './map/baidumap.html';
+	//        =>  'http://www.baidu.com/page/content/map/baidumap.html';
 	//
-	// relPath = "/map/baidumap.html";
-	//        =>  "http://www.baidu.com/map/baidumap.html";
+	// relPath = '/map/baidumap.html';
+	//        =>  'http://www.baidu.com/map/baidumap.html';
 	function getAbsPath(dir, relPath) {
-		if (!relPath.indexOf("../")) {
+		if (!relPath.indexOf('../')) {
 			var i = 0;
-			relPath = relPath.replace("../", function() {
+			relPath = relPath.replace('../', function() {
 				i = 1;
-				dir = dir.replace(/[^\/]*\/?$/, "");
-				return "";
+				dir = dir.replace(/[^\/]*\/?$/, '');
+				return '';
 			});
 
 			if (i) return getAbsPath(dir, relPath);
-		} else if (!relPath.indexOf("./")) {
-			relPath = relPath.replace("./", "");
-		} else if (!relPath.indexOf("/")) {
+		} else if (!relPath.indexOf('./')) {
+			relPath = relPath.replace('./', '');
+		} else if (!relPath.indexOf('/')) {
 			dir = getHostname();
 		}
 
@@ -152,12 +152,12 @@
 	function convertAbsPath($dom, href) {
 		if (noConvertPath) return;
 
-		var $doms = $dom.filter("[href],[src]").add($dom.find("[href],[src]")),
+		var $doms = $dom.filter('[href],[src]').add($dom.find('[href],[src]')),
 			curDir = getDir(href);
 
 		$doms.each(function(i, n) {
-			var href = n.getAttribute("href"),
-				src = n.getAttribute("src");
+			var href = n.getAttribute('href'),
+				src = n.getAttribute('src');
 
 			if (!isVoid(href) && !isAbsPath(href)) {
 				n.href = getAbsPath(curDir, href);
@@ -220,7 +220,7 @@
 	}*/
 
 	function removeScript(html) {
-		if(typeof html !== "string" || html.indexOf("<script") == -1) return html;
+		if(typeof html !== 'string' || html.indexOf('<script') == -1) return html;
 		var reg = /<script[^\>]*?>[^\x00]*?<\/script>/ig;
 		return html.replace(reg, '');
 	}
@@ -232,8 +232,8 @@
 			body = removeScript(bodyReg.exec(data)),
 			$headChildren = head ? $(head[1]) : null,
 			$bodyChildren = body ? $(body[1]) : null,
-			$head = $headChildren ? $("<div>").append($headChildren) : null,
-			$body = $bodyChildren ? $("<div>").append($bodyChildren) : null,
+			$head = $headChildren ? $('<div>').append($headChildren) : null,
+			$body = $bodyChildren ? $('<div>').append($bodyChildren) : null,
 
 			pjaxOptions = cacheData.pjaxOptions,
 			info = {},
@@ -259,9 +259,9 @@
 				containerSelector.push(selector);
 
 				var $dom;
-				if (selector === "head") {
+				if (selector === 'head') {
 					$dom = $head;
-				} else if (selector === "body") {
+				} else if (selector === 'body') {
 					$dom = $body;
 				} else {
 					$dom = $body.find(selector);
@@ -295,7 +295,7 @@
 
 		info.updateList = updateList;
 		info.href = href;
-		info.title = $head.children("title").text();
+		info.title = $head.children('title').text();
 		info.script = script;
 
 		setCache(cacheData, href, info);
@@ -315,8 +315,8 @@
 
 			id = pjaxID++; // id的主要作用是在更新内容时能拿到内容持有者的 updateCallback、completeCallback 和 script 脚本
 
-		container = $.map(container.split(","), function(n){ return $.trim(n); });
-		link = $.map(link.split(","), function(n){ return $.trim(n); });
+		container = $.map(container.split(','), function(n){ return $.trim(n); });
+		link = $.map(link.split(','), function(n){ return $.trim(n); });
 
 		cacheData.pjaxOptions[id] = {
 			container: container,
@@ -352,7 +352,7 @@
 		if (link.length) {
 			for (var i = 0, l = link.length; i < l; i++) {
 				if (link[i]) {
-					$doc.on("click", link[i],
+					$doc.on('click', link[i],
 						$.proxy(
 							linkClickCallback,
 							null,
@@ -371,7 +371,7 @@
 	function linkClickCallback(noCache, noHistory, noChangeURL, pile, opt, container, e) {
 		var href = this.href;
 
-		if (isVoid(this.getAttribute("href"))) {
+		if (isVoid(this.getAttribute('href'))) {
 			return;
 		} else {
 			e.preventDefault();
@@ -434,9 +434,9 @@
 					.eq(i)
 					.children()
 					.stop()
-					.css("opacity", 0)
+					.css('opacity', 0)
 					.appendTo($curContainer.eq(i))
-					.animate({"opacity": 1});
+					.animate({'opacity': 1});
 			});
 
 			opt.completeCallback.call($curContainer[0], $curContainer, $container, info.href);
@@ -486,11 +486,11 @@
 
 		$.ajax({
 			url: href,
-			type: "GET",
+			type: 'GET',
 			context: this,
 			beforeSend: function(xhr) {
-				xhr.setRequestHeader("X-PJAX", true);
-				xhr.setRequestHeader("X-PJAX-Container", JSON.stringify(container));
+				xhr.setRequestHeader('X-PJAX', true);
+				xhr.setRequestHeader('X-PJAX-Container', JSON.stringify(container));
 			}
 
 		}).done(function(data) {
@@ -510,15 +510,15 @@
 	}
 
 	var defaultOptions = {
-		container: "head,body", // 一个选择器，表示更新异步加载内容的容器。如果需要同时更新多个容器中的内容，则每个容器选择器用“,”隔开。
+		container: 'head,body', // 一个选择器，表示更新异步加载内容的容器。如果需要同时更新多个容器中的内容，则每个容器选择器用“,”隔开。
 		// container 也可以是一个数组，每个 container 数组值对应一个 link 数组值。这种设置是为了同时设置不同容器与不同链接间的刷新关系。
-		link: "", // 一个选择器，表示链接。点击后使用 ajax 加载内容。如果需要选择多个链接，则每个链接选择器用“,”隔开。
+		link: '', // 一个选择器，表示链接。点击后使用 ajax 加载内容。如果需要选择多个链接，则每个链接选择器用“,”隔开。
 		// link 也可以是一个数组，每个 link 数组值对应一个 container 数组值
-		script: "", // 一个script的选择器，将从加载到的HTML中过滤出选择器指定的script标签
+		script: '', // 一个script的选择器，将从加载到的HTML中过滤出选择器指定的script标签
 		// script 也可以是一个数组，每个 script 数组值对应一个 container 数组值
 
-		active: "", // 一个选择器，表示可以成为焦点的元素。当页面url更新后，会将href属性值与当前url相同的元素添加上焦点类
-		activeClass: "active", // 导航焦点类名
+		active: '', // 一个选择器，表示可以成为焦点的元素。当页面url更新后，会将href属性值与当前url相同的元素添加上焦点类
+		activeClass: 'active', // 导航焦点类名
 
 		noCache: false, // 表示是否不缓存更新内容，即每次都重新请求。
 		noHistory: false, // 表示是否不新建历史记录，即每次都覆盖当前历史记录。
@@ -528,8 +528,8 @@
 		// 如果 link 中指定了多个链接，则以数组的形式与其对应。如果 link 是一个数组，则以二维数组的形式与其对应
 		// pile 有些特殊，与 link 对应的每一个值可能并不是简单的布尔值，而是与当前 link 值对应的 container 值中每个容器一一对应的数组，它用来指明不同链接触发的更新在每一个容器中的更新规则
 		// 例如：
-		// container: ".container1, .container2, .container3",
-		// link: ".link1, .link2",
+		// container: '.container1, .container2, .container3',
+		// link: '.link1, .link2',
 		// pile: [[0,1,0], [0,0,0]],
 
 		noConvertPath: false, // 表示是否b不转换页面中所有资源的相对路径。默认关闭，如果确定异步加载的页面与当前页面都在同一目录下，则可以开启。
@@ -585,7 +585,7 @@
 			changeHistory(location.href, true);
 
 			if (supportPjax) {
-				window.addEventListener("popstate", function(e) {
+				window.addEventListener('popstate', function(e) {
 					var href = e.state;
 					if (href && href in cacheData) {
 						updateContent(cacheData[href]);
@@ -636,7 +636,7 @@
 	// noChangeURL 表示是否不改变当前URL
 	// pile 表示更新是否累积的规则所组成的数组，该数组中的每一个值和 container 参数中每一个值对应
 	p.update = function(href, container, noHistory, noChangeURL, pile) {
-		container = $.map(container.split(","), function(n){ return $.trim(n); });
+		container = $.map(container.split(','), function(n){ return $.trim(n); });
 		ajaxUpdate.call(this.options, null, href, container, noHistory, noChangeURL, pile);
 	}
 
