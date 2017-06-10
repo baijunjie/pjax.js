@@ -1,6 +1,8 @@
 /*!
- * Pjax v1.2.2
- * @author baijunjie
+ * Pjax v1.2.3
+ * @author Junjie.Bai
+ *
+ * https://github.com/baijunjie/pjax.js
  */
 (function(root, factory) {
 	'use strict';
@@ -10,8 +12,7 @@
 	} else if (typeof define === 'function' && define.amd) {
 		define(['jquery'], factory);
 	} else {
-		root.bjj = root.bjj || {};
-		root.bjj.Pjax = factory(root.jQuery);
+		root.Pjax = factory(root.jQuery);
 	}
 
 }(this, function($) {
@@ -95,7 +96,7 @@
 	}
 
 	// 获取当前的域名
-	function getHostname() {
+	function getCurHostname() {
 		return location.protocol + '//' + location.host;
 	}
 
@@ -118,34 +119,35 @@
 		return href.replace(dir, '');
 	}
 
-	// 获取绝对路径
-	// dir    = 'http://www.baidu.com/page/content/';
+	// 合并路径
+	// path     = 'http://www.baidu.com/page/content/';
 	//
-	// relPath = '../map/baidumap.html';
-	//        =>  'http://www.baidu.com/page/map/baidumap.html';
+	// filePath = '../map/baidumap.html';
+	//          =>  'http://www.baidu.com/page/map/baidumap.html';
 	//
-	// relPath = './map/baidumap.html';
-	//        =>  'http://www.baidu.com/page/content/map/baidumap.html';
+	// filePath = './map/baidumap.html';
+	//          =>  'http://www.baidu.com/page/content/map/baidumap.html';
 	//
-	// relPath = '/map/baidumap.html';
-	//        =>  'http://www.baidu.com/map/baidumap.html';
-	function getAbsPath(dir, relPath) {
-		if (!relPath.indexOf('../')) {
-			var i = 0;
-			relPath = relPath.replace('../', function() {
-				i = 1;
-				dir = dir.replace(/[^\/]*\/?$/, '');
+	// filePath = '/map/baidumap.html';
+	//          =>  'http://www.baidu.com/map/baidumap.html';
+	function combinePath(path, filePath) {
+		path = path.replace(/\/+$/, '') + '/';
+
+		if (!filePath.indexOf('../')) {
+			var replaced = false;
+			filePath = filePath.replace('../', function() {
+				replaced = true;
+				path = path.replace(/[^\/]*\/?$/, '');
 				return '';
 			});
-
-			if (i) return getAbsPath(dir, relPath);
-		} else if (!relPath.indexOf('./')) {
-			relPath = relPath.replace('./', '');
-		} else if (!relPath.indexOf('/')) {
-			dir = getHostname();
+			if (replaced) return combinePath(path, filePath);
+		} else if (!filePath.indexOf('./')) {
+			filePath = filePath.replace('./', '');
+		} else if (!filePath.indexOf('/')) {
+			path = getCurHostname();
 		}
 
-		return dir + relPath;
+		return path + filePath;
 	}
 
 	// 将所有资源的路径转化成绝对路径
@@ -160,10 +162,10 @@
 				src = n.getAttribute('src');
 
 			if (!isVoid(href) && !isAbsPath(href)) {
-				n.href = getAbsPath(curDir, href);
+				n.href = combinePath(curDir, href);
 			}
 			if (!isVoid(src) && !isAbsPath(src)) {
-				n.src = getAbsPath(curDir, src);
+				n.src = combinePath(curDir, src);
 			}
 		});
 	}
