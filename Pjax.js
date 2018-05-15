@@ -1,5 +1,5 @@
 /*!
- * Pjax v1.2.3
+ * Pjax v1.2.4
  * @author Junjie.Bai
  *
  * https://github.com/baijunjie/pjax.js
@@ -21,8 +21,6 @@
 	var supportPjax = !!window.history.pushState;
 
 	var scroller = allowScroll(document.documentElement) ? document.documentElement : document.body,
-		//$scroller = $(scroller),
-		$win = $(window),
 		$doc = $(document),
 		$body = $(document.body),
 
@@ -111,14 +109,6 @@
 		return href.replace(/[^\/]*$/, '');
 	}
 
-	// 获取相对路径
-	// href = 'http://www.baidu.com/page/content/index.html';
-	// dir  = 'http://www.baidu.com/page/';
-	//      =>  'content/index.html'
-	function getRelPath(href, dir) {
-		return href.replace(dir, '');
-	}
-
 	// 合并路径
 	// path     = 'http://www.baidu.com/page/content/';
 	//
@@ -181,7 +171,7 @@
 	function allowScroll(elem, testHor) {
 		var st = elem.scrollTop;
 		elem.scrollTop += (st > 0) ? -1 : 1;
-		if (elem.scrollTop != st) {
+		if (elem.scrollTop !== st) {
 			elem.scrollTop = st;
 			return true;
 		}
@@ -190,7 +180,7 @@
 
 		var sl = elem.scrollLeft;
 		elem.scrollLeft += (sl > 0) ? -1 : 1;
-		if (elem.scrollLeft != sl) {
+		if (elem.scrollLeft !== sl) {
 			elem.scrollLeft = sl;
 			return true;
 		}
@@ -222,8 +212,8 @@
 	}*/
 
 	function removeScript(html) {
-		if(typeof html !== 'string' || html.indexOf('<script') == -1) return html;
-		var reg = /<script[^\>]*?>[^\x00]*?<\/script>/ig;
+		if(typeof html !== 'string' || html.indexOf('<script') === -1) return html;
+		var reg = /<script[^>]*?>[^\x00]*?<\/script>/ig;
 		return html.replace(reg, '');
 	}
 
@@ -247,7 +237,7 @@
 
 		// 根据ajaxOptions获取相应的内容信息
 		var alreadyGetSelector = {}; // 记录已经获取过的选择器，防止重复获取
-		for (var i = 0, l = pjaxOptions.length; i < l; i++) {
+		for (var i = 0, len = pjaxOptions.length; i < len; i++) {
 			var opt = pjaxOptions[i];
 			if (opt.script) {
 				script.push($head.find(opt.script).add($body.find(opt.script)));
@@ -352,7 +342,7 @@
 		curInfo.script[id] = $(script);
 
 		if (link.length) {
-			for (var i = 0, l = link.length; i < l; i++) {
+			for (i = 0, l = link.length; i < l; i++) {
 				if (link[i]) {
 					$doc.on('click', link[i],
 						$.proxy(
@@ -461,7 +451,7 @@
 		while (l--) {
 			if (!changeID[l]) continue; // 如果该id对应的内容没有发生过变化，则跳过
 
-			var opt = cacheData.pjaxOptions[l];
+			opt = cacheData.pjaxOptions[l];
 
 			if (!alreadyActive[opt.active+opt.activeClass]) {
 				setActiveNav(opt.active, opt.activeClass, info.href);
@@ -640,7 +630,7 @@
 	p.update = function(href, container, noHistory, noChangeURL, pile) {
 		container = $.map(container.split(','), function(n){ return $.trim(n); });
 		ajaxUpdate.call(this.options, null, href, container, noHistory, noChangeURL, pile);
-	}
+	};
 
 	return Pjax;
 
