@@ -425,7 +425,7 @@
 			$container.each(function(i) {
 				$container
 					.eq(i)
-					.children()
+					.contents()
 					.stop()
 					.css('opacity', 0)
 					.appendTo($curContainer.eq(i))
@@ -632,7 +632,12 @@
 	// - noChangeURL 表示是否不改变当前URL
 	// - pile 表示更新是否累积的规则所组成的数组，该数组中的每一个值和 container 参数中每一个值对应
 	p.update = function(options) {
-        options = options || {};
+		if (typeof options === 'string') {
+			options = { href: options }
+		} else {
+			options = options || {};
+		}
+
 		var href = options.href || window.location.href,
 			container = options.container || this.options.container,
             noHistory = options.noHistory,
