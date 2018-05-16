@@ -67,21 +67,25 @@ pjax.update(href, container, noHistory, noChangeURL, pile);
 ## AMD
 ```js
 require(["Pjax"], function(Pjax) {
-	new Pjax({
-		container: "#index_pageCxt, #midContent .sideBar, #topHeader .dongtai",
-		link: "#midContent a, #footer a",
-		active: "#midContent a",
-		load: function() {
-			window.bjj.progress.start();
-		},
-		done: function(url) {
-			window.bjj.progress.done();
-		},
-		fail: function(url) {
-			alert("您所请求的内容不存在！\n" + url);
-			window.bjj.progress.fail();
-		}
-	});
+    new Pjax({
+        container: '.section-title, .list__label-area, .list__show-list, .pagination',
+        link: '.list__label-area a, .pagination a',
+        noHistory: [1, 1],
+        pile: [[0,0,0,0], [0,0,0,0]],
+        load: function() {
+            window.bjj.progress.start();
+        },
+        done: function(url) {
+            window.bjj.progress.done();
+        },
+        fail: function(url) {
+            alert("您所请求的内容不存在！\n" + url);
+            window.bjj.progress.fail();
+        },
+        complete: function() {
+            $(document).trigger('lazyloadUpdate');
+        }
+    });
 });
 ```
 
