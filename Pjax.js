@@ -347,7 +347,7 @@
 					$doc.on('click', link[i],
 						$.proxy(
 							linkClickCallback,
-							null,
+							this,
 							noCacheIsArray ? noCache[i] : noCache,
 							noHistoryIsArray ? noHistory[i] : noHistory,
 							noChangeURLIsArray ? noChangeURL[i] : noChangeURL,
@@ -361,9 +361,10 @@
 	}
 
 	function linkClickCallback(noCache, noHistory, noChangeURL, pile, opt, container, e) {
-		var href = this.href;
+		var link = e.target,
+			href = link.href;
 
-		if (isVoid(this.getAttribute('href'))) {
+		if (isVoid(link.getAttribute('href'))) {
 			return;
 		} else {
 			e.preventDefault();
@@ -376,11 +377,11 @@
 				return;
 			}
 
-			updateContent(info, container, pile);
+			updateContent.call(this, info, container, pile);
 			changeHistory(href, noHistory, noChangeURL);
 
 		} else {
-			ajaxUpdate.call(opt, this, href, container, noHistory, noChangeURL, pile);
+			ajaxUpdate.call(this, opt, link, href, container, noHistory, noChangeURL, pile);
 		}
 	}
 
@@ -413,7 +414,7 @@
 			var id = updateInfo.id,
 				opt = cacheData.pjaxOptions[id];
 
-			opt.updateCallback.call($curContainer[0], $curContainer, $container, info.href);
+			opt.updateCallback.call(this, $curContainer, $container, info.href);
 
 			if (!pile || ($.isArray(pile) && !pile[$.inArray(selector, container)])) {
 				// 由于脚本在内容通过缓存再次被添加进页面时可以重复执行，因此这里要彻底清除
@@ -431,7 +432,7 @@
 					.animate({'opacity': 1});
 			});
 
-			opt.completeCallback.call($curContainer[0], $curContainer, $container, info.href);
+			opt.completeCallback.call(this, $curContainer, $container, info.href);
 
 			//$updateContent = $updateContent.add($content);
 			changeID[id] = true;
@@ -472,9 +473,9 @@
 		curInfo = info;
 	}
 
-	function ajaxUpdate(link, href, container, noHistory, noChangeURL, pile) {
-		var opt = this;
-		opt.load.call(link, href);
+	function ajaxUpdate(options, link, href, container, noHistory, noChangeURL, pile) {
+		var self = this;
+        options.load.call(self, href, link);
 
 		$.ajax({
 			url: href,
@@ -491,13 +492,13 @@
 
 			var info = cacheData[href];
 
-			updateContent(info, container, pile);
+			updateContent.call(self, info, container, pile);
 			changeHistory(href, noHistory, noChangeURL);
 
-			opt.done.call(link, href, data);
+            options.done.call(self, href, data, link);
 
 		}).fail(function() {
-			opt.fail.call(link, href, container);
+            options.fail.call(self, href, link);
 		});
 	}
 
@@ -526,13 +527,12 @@
 
 		noConvertPath: false, // 表示是否b不转换页面中所有资源的相对路径。默认关闭，如果确定异步加载的页面与当前页面都在同一目录下，则可以开启。
 
-		load: function(url){}, // 加载开始时的回调，this指向加载的导航链接的DOM元素，将请求的url作为参数传入
-		done: function(url, data){}, // 加载结束时的回调，this指向加载的导航链接的DOM元素，将请求的url以及请求到的data作为参数传入
-		fail: function(url){}, // 加载结束时的回调，this指向加载的导航链接的DOM元素，将请求的url作为参数传入
+		load: function(url, link){}, // 加载开始时的回调，将请求的url与导航链接的DOM元素作为参数传入
+		done: function(url, data, link){}, // 加载结束时的回调，将请求的url与导航链接的DOM元素以及请求到的data作为参数传入
+		fail: function(url, link){}, // 加载结束时的回调，将请求的url与导航链接的DOM元素作为参数传入
 
 		update: function($oldContainerr, $newContainer, href){}, // 更新内容前的回调，如果有多个容器，则每个容器在内容更新前都会调用一次
 		complete: function($oldContainer, $newContainer, href){} // 更新内容完成后的回调，如果有多个容器，则每个容器在内容更新完成后都会调用一次
-		// this 指向更新容器的DOM元素
 		// $oldContainer 表示旧容器的 jQuery 对象
 		// $newContainer 表示新容器的 jQuery 对象，在更新前可以修改该对象，从而改变被更新的内容
 		// href 触发内容更新的链接地址
@@ -577,10 +577,11 @@
 			changeHistory(location.href, true);
 
 			if (supportPjax) {
+				var self = this;
 				window.addEventListener('popstate', function(e) {
 					var href = e.state;
 					if (href && href in cacheData) {
-						updateContent(cacheData[href]);
+						updateContent.call(self, cacheData[href]);
 					}
 					window.setTimeout(savePos, 0); // 这里必须异步执行，否则无效
 				}, false);
@@ -606,7 +607,8 @@
 			pileIsArray = $.isArray(pile);
 
 		for (var i = 0, l = container.length; i < l; i++) {
-			createPjax(
+			createPjax.call(
+				this,
 				container[i],
 				link[i],
 				script[i],
@@ -622,14 +624,22 @@
 	};
 
 	// 通过 update 更新的链接地址不会调用缓存，而是重新请求
-	// container 表示要刷新容器的选择器，如果需要同时刷新多个容器中的内容，则每个容器选择器用“,”隔开
-	// 注意，这里的 container 选择器必须是创建 pjax 对象时指定的容器选择器中包含的，否则将无法更新
-	// noHistory 表示这次刷新是否新建一条历史记录
-	// noChangeURL 表示是否不改变当前URL
-	// pile 表示更新是否累积的规则所组成的数组，该数组中的每一个值和 container 参数中每一个值对应
-	p.update = function(href, container, noHistory, noChangeURL, pile) {
-		container = $.map(container.split(','), function(n){ return $.trim(n); });
-		ajaxUpdate.call(this.options, null, href, container, noHistory, noChangeURL, pile);
+	// options 包含以下参数
+	// - href 表示要刷新的 url，默认为当前页面的 url
+	// - container 表示要刷新容器的选择器，如果需要同时刷新多个容器中的内容，则每个容器选择器用“,”隔开
+	//   注意，这里的 container 选择器必须是创建 pjax 对象时指定的容器选择器中包含的，否则将无法更新
+	// - noHistory 表示这次刷新是否不新建历史记录
+	// - noChangeURL 表示是否不改变当前URL
+	// - pile 表示更新是否累积的规则所组成的数组，该数组中的每一个值和 container 参数中每一个值对应
+	p.update = function(options) {
+        options = options || {};
+		var href = options.href || window.location.href,
+			container = options.container || this.options.container,
+            noHistory = options.noHistory,
+            noChangeURL = options.noChangeURL,
+            pile = options.pile;
+        if (container) container = $.map(container.split(','), function(n){ return $.trim(n); });
+		ajaxUpdate.call(this, this.options, null, href, container, noHistory, noChangeURL, pile);
 	};
 
 	return Pjax;

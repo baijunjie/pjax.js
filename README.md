@@ -70,7 +70,7 @@ require(["Pjax"], function(Pjax) {
     new Pjax({
         container: '.section-title, .list__label-area, .list__show-list, .pagination',
         link: '.list__label-area a, .pagination a',
-        noHistory: [1, 1],
+        noHistory: [0, 1],
         pile: [[0,0,0,0], [0,0,0,0]],
         load: function() {
             window.bjj.progress.start();
