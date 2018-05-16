@@ -1,5 +1,5 @@
 /*!
- * Pjax v1.2.4
+ * Pjax v1.2.5
  * @author Junjie.Bai
  *
  * https://github.com/baijunjie/pjax.js
@@ -90,7 +90,7 @@
 
 	// 判断是否为绝对路径
 	function isAbsPath(href) {
-		return href && (href.indexOf('http') === 0 || href.indexOf('file:') === 0);
+		return href && (href.indexOf('http') === 0 || href.indexOf('file:') === 0 || href.indexOf('data:') === 0);
 	}
 
 	// 获取当前的域名
