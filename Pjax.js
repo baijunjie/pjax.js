@@ -1,5 +1,5 @@
 /*!
- * Pjax v1.2.5
+ * Pjax v1.2.6
  * @author Junjie.Bai
  *
  * https://github.com/baijunjie/pjax.js
@@ -438,11 +438,11 @@
                     .animate({'opacity': 1});
             });
 
-            opt.completeCallback.call(this, $curContainer, $container, info.href);
-
             $updateContent = $updateContent.add($curContainer);
             changeID[id] = true;
         }
+
+        opt.completeCallback.call(this, info.href);
 
         if (!changeID.length) return;
 
@@ -539,11 +539,11 @@
         done: function(url, data, link){}, // 加载结束时的回调，将请求的url与导航链接的DOM元素以及请求到的data作为参数传入
         fail: function(url, link){}, // 加载结束时的回调，将请求的url与导航链接的DOM元素作为参数传入
 
-        update: function($oldContainerr, $newContainer, href){}, // 更新内容前的回调，如果有多个容器，则每个容器在内容更新前都会调用一次
-        complete: function($oldContainer, $newContainer, href){} // 更新内容完成后的回调，如果有多个容器，则每个容器在内容更新完成后都会调用一次
-        // $oldContainer 表示旧容器的 jQuery 对象
-        // $newContainer 表示新容器的 jQuery 对象，在更新前可以修改该对象，从而改变被更新的内容
+        update: function($containerr, $newContainer, href){}, // 更新内容前的回调，如果有多个容器，则每个容器在内容更新前都会调用一次
+        // $container    表示容器的 jQuery 对象（容器不不会被更新，更新的只是容器的内容）
+        // $newContainer 表示新内容容器的 jQuery 对象，在更新前可以修改该对象，从而改变被更新的内容
         // href 触发内容更新的链接地址
+        complete: function(href){} // 所有内容更新完成后的回调，只会调用一次
     };
 
     function Pjax() {
