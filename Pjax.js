@@ -204,12 +204,12 @@
             if (top === undefined || top > rect.top) top = rect.top;
         });
 
-        if (left > winHalfWidth || left < 0) x += left;
-        if (top > winHalfHeight || top < 0) y += top;
+        if (left > winHalfWidth || left < 0) x += left - offsetX;
+        if (top > winHalfHeight || top < 0) y += top - offsetY;
 
         $scroller.stop().animate({
-            scrollLeft: x - offsetX,
-            scrollTop: y - offsetY
+            scrollLeft: x,
+            scrollTop: y
         });
     }
 
